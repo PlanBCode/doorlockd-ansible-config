@@ -1,0 +1,49 @@
+# virtual hosts without a listen 80 entry) to HTTPS
+server {
+  listen 80 default_server;
+  listen [::]:80 default_server ipv6only=on;
+
+  # Should never be used, but it should exist to prevent errors
+  #root /data/www/default;
+
+  return 301 https://$host$request_uri;
+}
+
+upstream doorlockd-backend {
+  server unix:/run/doorlockd-backend.sock;
+}
+
+server {
+  listen       443 ssl default_server;
+
+  ssl_certificate      /etc/ssl/certs/ssl-cert-snakeoil.pem;
+  ssl_certificate_key  /etc/ssl/private/ssl-cert-snakeoil.key;
+
+  ssl_session_cache    shared:SSL:1m;
+  ssl_session_timeout  5m;
+
+  #ssl_ciphers  HIGH:!aNULL:!MD5;
+  #ssl_prefer_server_ciphers  on;
+
+  ssl_verify_client optional_no_ca;
+
+  location / {
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $http_host;
+
+    # proxy_set_header X-SSL-CERT $ssl_client_escaped_cert;
+    proxy_set_header X-SSL-RAW-CERT $ssl_client_raw_cert;
+    # proxy_set_header X-SSL-Figerprint $ssl_client_fingerprint;
+
+    # we don't want nginx trying to do something clever with
+    # redirects, we set the Host: header above already.
+    proxy_redirect off;
+
+    proxy_pass http://doorlockd-backend;
+  }
+
+  location /static {
+	   alias   {{ django_dir }}/run/static;
+  }
+}

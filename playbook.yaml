@@ -1,0 +1,283 @@
+- name: Sane environment
+  hosts: all
+  tags: sane
+  gather_facts: False # Not using facts
+  tasks:
+    # Accept some user preferences through SSH
+    - name: Configure SSH AcceptEnv
+      lineinfile:
+        dest: "/etc/ssh/sshd_config"
+        regexp: "^AcceptEnv.*$"
+        line: "AcceptEnv LANG LC_* GIT_* EDITOR"
+        insertafter: "EOF"
+        state: present
+      notify:
+        - Restart sshd
+    # Allow using git through sudo
+    - name: Configure sudo env_keep
+      ansible.builtin.copy:
+        dest: '/etc/sudoers.d/env_keep'
+        src: './files/sudoers_env_keep'
+    # Timesync is needed for apt to verify signatures. Timesync only
+    # works if systemd-networkd does not have offline status (so does
+    # not work if adding a manual route).
+    - name: Enable NTP timesync
+      # Normally you would use timedatectl set-ntp yes, but this enables
+      # a service underwater, so do that directly so ansible can see if
+      # it is already done or not. The service name is taken from
+      # /usr/lib/systemd/ntp-units.d/*.list normally, see the
+      # systemd-timedated.service manpage.
+      ansible.builtin.service:
+        name: systemd-timesyncd
+        enabled: true
+        state: started
+    - name: Update apt cache if old
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+    - name: Install useful packages
+      ansible.builtin.apt:
+        pkg:
+        - vim
+        - tig
+        - git
+    # Ensure that git pushes always use SSH instead of HTTPS (to be used
+    # along with SSH agent forwarding)
+    - name: Configure git SSH push
+      community.general.git_config:
+        name: 'url.git@github.com:.pushInsteadOf'
+        value: 'https://github.com/'
+  handlers:
+    - name: Restart sshd
+      ansible.builtin.service:
+        name: sshd
+        state: restarted
+
+
+- name: Check out doorlockd
+  hosts: [locks, managers]
+  tags: [client, manager]
+  gather_facts: False # Not using facts
+  vars:
+    clone_dir: /opt/doorlockd
+  tasks:
+    - name: Checkout doorlockd
+      ansible.builtin.git:
+        repo: https://github.com/wie-niet/doorlockd.git
+        version: ansible-test
+        dest: '{{ clone_dir }}'
+
+
+- name: Set up doorlockd
+  hosts: locks
+  tags: client
+  gather_facts: False # Not using facts
+  vars:
+    clone_dir: /opt/doorlockd
+    client_dir: '{{ clone_dir }}/lock-client'
+    run_dir: '{{ client_dir }}/run'
+    cert: '{{ client_dir }}/client.pem'
+    user: 'debian'
+    group: 'debian'
+  tasks:
+    - name: Configure UART devicetree
+      when: board == "beagleboneblack"
+      lineinfile:
+        dest: "/boot/uEnv.txt"
+        regexp: "^#?dtb_overlay=.*$"
+        line: "dtb_overlay=/lib/firmware/BB-UART2-00A0.dtbo"
+        insertafter: "EOF"
+        state: present
+
+    - name: Install apt dependencies
+      ansible.builtin.apt:
+        pkg:
+        - python3-poetry
+        - python3-dev
+      notify:
+        - Restart doorlockd-client
+
+    - name: Install python dependendencies
+      become: true
+      become_user: '{{ user }}'
+      ansible.builtin.command:
+        # TODO: Can we somehow let ansible know whether something
+        # changed or not, so it can show proper ok vs changed output?
+        cmd: poetry install --only=main --no-root
+        chdir: '{{ client_dir }}'
+      notify:
+        - Restart doorlockd-client
+
+    - name: Create run dir
+      ansible.builtin.file:
+        state: 'directory'
+        path: '{{ run_dir }}'
+        owner: '{{ user }}'
+        group: '{{ group }}'
+        mode: 'u=rwx,g=,o='
+
+    - name: Generate certificate
+      ansible.builtin.command:
+        creates: '{{ cert }}'
+        cmd: '{{ client_dir }}/tools/gencert.sh "{{ cert }}"'
+
+    - name: Certificate permissions
+      ansible.builtin.file:
+        path: '{{ cert }}'
+        owner: root
+        group: '{{ group }}'
+        mode: 'u=rw,g=r'
+
+    - name: Copy config
+      ansible.builtin.copy:
+        dest: '{{ client_dir }}/config.ini'
+        src: './files/lock-client-config.ini'
+      notify:
+        - Restart doorlockd-client
+
+    - name: Install systemd service
+      ansible.builtin.template:
+        dest: '/etc/systemd/system/'
+        src: './files/doorlockd-client.service'
+      notify:
+        - Reload systemd
+
+    - name: Enable service
+      ansible.builtin.service:
+        name: doorlockd-client.service
+        enabled: true
+
+  handlers:
+    - name: Reload systemd
+      command: /usr/bin/systemctl daemon-reload
+
+    - name: Restart doorlockd-client
+      ansible.builtin.service:
+        name: doorlockd-client
+        state: restarted
+
+
+- name: Set up manager
+  hosts: managers
+  tags: manager
+  gather_facts: False # Not using facts
+  vars:
+    clone_dir: /opt/doorlockd
+    django_dir: '{{ clone_dir }}/django-backend'
+    run_dir: '{{ django_dir }}/run'
+    user: 'debian'
+    group: 'debian'
+  tasks:
+    - name: Install apt dependencies
+      ansible.builtin.apt:
+        pkg:
+        - python3-poetry
+        - nginx
+        - ssl-cert # Autogenerates a self-signed certificate (called "snakeoil")
+
+    - name: Install python dependendencies
+      become: true
+      become_user: '{{ user }}'
+      ansible.builtin.command:
+        # TODO: Can we somehow let ansible know whether something
+        # changed or not, so it can show proper ok vs changed output?
+        cmd: poetry install --only=main
+        chdir: '{{ django_dir }}'
+
+    - name: Install systemd socket
+      ansible.builtin.copy:
+        dest: '/etc/systemd/system/'
+        src: './files/doorlockd-backend.socket'
+      notify:
+        - Reload systemd
+
+    - name: Install systemd service
+      ansible.builtin.template:
+        dest: '/etc/systemd/system/'
+        src: './files/doorlockd-backend.service'
+      notify:
+        - Reload systemd
+
+    - name: Enable socket
+      ansible.builtin.service:
+        name: doorlockd-backend.socket
+        enabled: true
+        state: started
+
+    - name: Create run dir
+      ansible.builtin.file:
+        state: 'directory'
+        path: '{{ run_dir }}'
+        # Restrict datadir, so we can put root-owned world-readable
+        # files (e.g. client.pem) inside that will be read-only for the
+        # lock-client
+        owner: '{{ user }}'
+        group: '{{ group }}'
+        mode: 'u=rwx'
+
+    - name: Run migrations
+      # Run as unprivileged user to ensure db access happens correctly
+      become: true
+      become_user: '{{ user }}'
+      ansible.builtin.command:
+        cmd: poetry run ./manage.py migrate
+        chdir: '{{ django_dir }}'
+      notify:
+        - Restart gunicorn
+
+    - name: Collect static files
+      become: true
+      become_user: '{{ user }}'
+      ansible.builtin.command:
+        cmd: poetry run ./manage.py collectstatic
+        chdir: '{{ django_dir }}'
+      notify:
+        - Restart gunicorn
+
+    - name: Install nginx config
+      ansible.builtin.template:
+        dest: '/etc/nginx/sites-available/default'
+        src: './files/nginx-vhost'
+      notify:
+        - Reload nginx
+
+  handlers:
+    - name: Reload systemd
+      command: /usr/bin/systemctl daemon-reload
+
+    - name: Reload nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+
+    - name: Restart gunicorn
+      ansible.builtin.service:
+        name: doorlockd-backend
+        state: restarted
+
+
+# Run these based on tags, e.g.: ansible-playbook -i inventory.yaml playbook.yaml --tags enable_emmc --limit hostname
+- name: Utilities
+  hosts: all
+  gather_facts: False # Not using facts
+  tasks:
+    - name: Enable EMMC device (never needed, left in as an example)
+      lineinfile:
+        dest: "/boot/uEnv.txt"
+        regexp: "^#?uboot_overlay_addr7=.*$"
+        line: "uboot_overlay_addr7=BB-BONE-eMMC1-01-00A0.dtbo"
+        insertafter: "EOF"
+        state: present
+      when: board == "beagleboneblack"
+      tags: [never, enable_emmc]
+    - name: Enable default route over usb0 network (until reboot)
+      ansible.builtin.copy:
+        dest: "/run/systemd/network/usb0.network.d/"
+        src: "./files/usb0-outward-route.network.conf"
+      when: board == "beagleboneblack"
+      tags: [never, usb_route]
+      notify:
+        - Reload networkd
+  handlers:
+    - name: Reload networkd
+      command: /usr/bin/networkctl reload

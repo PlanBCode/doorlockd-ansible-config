@@ -1,0 +1,12 @@
+[Unit]
+Description=Doorlockd client
+After=network.target
+
+[Service]
+User={{ user }}
+Group={{ group }}
+WorkingDirectory={{ client_dir }}
+ExecStart=poetry run ./app.py
+
+[Install]
+WantedBy=multi-user.target

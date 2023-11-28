@@ -1,0 +1,19 @@
+[Unit]
+Description=gunicorn daemon
+Requires=doorlockd-backend.socket
+After=network.target
+
+[Service]
+Type=notify
+User={{ user }}
+Group={{ group }}
+RuntimeDirectory=doorlockd-backend
+WorkingDirectory={{ django_dir }}
+ExecStart=poetry run gunicorn doorlockd_backend.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
