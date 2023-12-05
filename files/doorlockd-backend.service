@@ -9,7 +9,10 @@ User={{ user }}
 Group={{ group }}
 RuntimeDirectory=doorlockd-backend
 WorkingDirectory={{ django_dir }}
-ExecStart=poetry run gunicorn doorlockd_backend.wsgi:application
+# By default, gunicorn runs sync workers (one request per worker), which
+# is fine for long-lived requests. For long polling or websockets, this
+# should probably be switched to a threaded/async worker type.
+ExecStart=poetry run gunicorn --workers 4 doorlockd_backend.wsgi:application
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed
 TimeoutStopSec=5
