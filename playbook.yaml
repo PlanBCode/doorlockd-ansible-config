@@ -271,15 +271,6 @@
   hosts: all
   gather_facts: False # Not using facts
   tasks:
-    - name: Enable EMMC device (never needed, left in as an example)
-      lineinfile:
-        dest: "/boot/uEnv.txt"
-        regexp: "^#?uboot_overlay_addr7=.*$"
-        line: "uboot_overlay_addr7=BB-BONE-eMMC1-01-00A0.dtbo"
-        insertafter: "EOF"
-        state: present
-      when: board == "beagleboneblack"
-      tags: [never, enable_emmc]
     - name: Enable default route over usb0 network (until reboot)
       ansible.builtin.copy:
         dest: "/run/systemd/network/usb0.network.d/"
