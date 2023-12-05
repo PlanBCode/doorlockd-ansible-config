@@ -1,6 +1,6 @@
-- name: Sane environment
+- name: System setup
   hosts: all
-  tags: sane
+  tags: system
   gather_facts: False # Not using facts
   tasks:
     # Accept some user preferences through SSH
