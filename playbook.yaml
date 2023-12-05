@@ -285,3 +285,24 @@
   handlers:
     - name: Reload networkd
       command: /usr/bin/networkctl reload
+
+- name: Flash to EMMC
+  hosts: all
+  tags: [never, flash_emmc]
+  gather_facts: False # Not using facts
+  vars:
+    flasher_script: /usr/sbin/init-beagle-flasher
+  tasks:
+    - name: Check flasher script exists
+      ansible.builtin.file:
+        state: file
+        path: "{{ flasher_script }}"
+      when: board == "beagleboneblack"
+    - name: Configure flasher as init
+      ansible.builtin.lineinfile:
+        path: /boot/uEnv.txt
+        line: "cmdline=init={{ flasher_script }}"
+    - name: Disable SSH host key regeneration
+      ansible.builtin.lineinfile:
+        path: /boot/SOC.sh
+        line: disable_ssh_regeneration=true
