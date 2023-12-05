@@ -239,7 +239,7 @@
       become: true
       become_user: '{{ user }}'
       ansible.builtin.command:
-        cmd: poetry run ./manage.py collectstatic
+        cmd: poetry run ./manage.py collectstatic --no-input
         chdir: '{{ django_dir }}'
       notify:
         - Restart gunicorn
