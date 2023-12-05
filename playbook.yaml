@@ -2,6 +2,8 @@
   hosts: all
   tags: system
   gather_facts: False # Not using facts
+  vars:
+    user: 'debian'
   tasks:
     # Accept some user preferences through SSH
     - name: Configure SSH AcceptEnv
@@ -47,6 +49,14 @@
       community.general.git_config:
         name: 'url.git@github.com:.pushInsteadOf'
         value: 'https://github.com/'
+    - name: Configure user authorized keys
+      ansible.builtin.copy:
+        dest: '/home/{{ user }}/.ssh/'
+        src: './files/authorized_keys'
+    - name: Configure root authorized keys
+      ansible.builtin.copy:
+        dest: '/home/root/.ssh/'
+        src: './files/authorized_keys'
   handlers:
     - name: Restart sshd
       ansible.builtin.service:
