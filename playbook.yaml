@@ -279,6 +279,9 @@
       tags: [never, usb_route]
       notify:
         - Reload networkd
+    - name: Reboot system
+      tags: [never, reboot]
+      command: /usr/sbin/shutdown -r now
   handlers:
     - name: Reload networkd
       command: /usr/bin/networkctl reload
