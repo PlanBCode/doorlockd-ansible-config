@@ -6,9 +6,11 @@ the outdated Debian 10 version. Rcn-ee.net has newer images, see:
 
 https://forum.beagleboard.org/tag/latest-images
 
-Though currently that only lists arm64 images for Debian 12, but the
-armhf images are available at e.g.
-https://rcn-ee.net/rootfs/release/2023-08-05/bookworm-minimal-armhf/
+The BBB needs the armhf image (*not* ARM64), with the AM335x arch.
+
+Above forum topic currently does not list the ARM335x armhf images for
+Debian 12, but they are available for download at e.g.
+https://rcn-ee.net/rootfs/release/2023-10-07/bookworm-minimal-armhf/
 just not 100% final yet:
 https://forum.beagleboard.org/t/bcm-module-beagle-bone-black-with-debian-bookworm/35490/6
 
