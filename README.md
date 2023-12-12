@@ -18,6 +18,7 @@ Steps:
  - Flash image on SD card
  - Setup key authentication for root (login with debian:temppwd, create
    `/root/.ssh/authorized_keys` using sudo)
+ - Reboot (to complete SD filesystem resize)
  - Add to inventory (or use existing maybe)
  - Run initial sync:
 
