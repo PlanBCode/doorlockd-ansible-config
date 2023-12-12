@@ -57,6 +57,14 @@
       ansible.builtin.copy:
         dest: '/home/root/.ssh/'
         src: './files/authorized_keys'
+    - name: Allow passwordless sudo
+      community.general.sudoers:
+        name: passwordless
+        state: present
+        user: "{{ user }}"
+        commands: ALL
+        nopassword: true
+
   handlers:
     - name: Restart sshd
       ansible.builtin.service:
