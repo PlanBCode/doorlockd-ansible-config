@@ -64,6 +64,14 @@
         user: "{{ user }}"
         commands: ALL
         nopassword: true
+    - name: Disable user password
+      ansible.builtin.user:
+        name: "{{ user }}"
+        password_lock: true
+    - name: Disable root password
+      ansible.builtin.user:
+        name: "{{ user }}"
+        password_lock: true
 
   handlers:
     - name: Restart sshd
