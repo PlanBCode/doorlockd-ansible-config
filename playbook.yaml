@@ -55,7 +55,7 @@
         src: './files/authorized_keys'
     - name: Configure root authorized keys
       ansible.builtin.copy:
-        dest: '/home/root/.ssh/'
+        dest: '/root/.ssh/'
         src: './files/authorized_keys'
     - name: Allow passwordless sudo
       community.general.sudoers:
