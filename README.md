@@ -59,3 +59,13 @@ This sets temporary config (until beaglebone is rebooted), to prevent
 this default route from breaking connectivity later (e.g. when
 the MASQUERADE is not set up anymore and you have an actual ethernet
 connection available on the beaglebone).
+
+Write to EMMC (Beaglebone)
+--------------------------
+To copy SD card installation to EMMC:
+
+    ansible-playbook -i inventory.yaml playbook.yaml --tags flash_emmc --limit test
+    ansible-playbook -i inventory.yaml playbook.yaml --tags reboot --limit test
+
+The second command will raise an error because the board reboots
+immediately.
