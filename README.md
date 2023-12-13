@@ -1,3 +1,18 @@
+Ansible and system names
+------------------------
+All managed systems are listed in `inventory.yaml`, to let Ansible know
+where to find them and what hardware they use.
+
+By default, Ansible deploys changes to all listed hosts. To deploy to
+only hose, you can use the `--limit` option.
+
+The inventory contains a `test-bbb` and `test-rockpi-s` entry, which are
+intended to be used for local testing (will install both client and
+manager).
+
+Below, all commands use `--limit test`, make sure to change that to
+whatever host you are working with.
+
 Setting up a Beaglebone black
 ------------------
 Start with a base Debian image, console or minimal flavor. At the time
