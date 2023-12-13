@@ -43,6 +43,8 @@
         - vim
         - tig
         - git
+        - avahi-daemon
+        - systemd-resolved
     # Ensure that git pushes always use SSH instead of HTTPS (to be used
     # along with SSH agent forwarding)
     - name: Configure git SSH push
