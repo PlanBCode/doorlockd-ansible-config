@@ -115,7 +115,7 @@
     - name: Checkout doorlockd
       ansible.builtin.git:
         repo: https://github.com/wie-niet/doorlockd.git
-        version: ansible-test
+        version: 50374c1afdc51c944659ea152e0a01deaf41e2c9
         dest: '{{ clone_dir }}'
 
 
