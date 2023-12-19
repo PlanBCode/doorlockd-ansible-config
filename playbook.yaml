@@ -47,6 +47,13 @@
         - tig
         - git
         - avahi-daemon
+    - name: Install resolved packages
+      # Beaglebone uses Google DNS by default, installing resolved
+      # ensures local DNS is used. Armbian uses NetworkManager by
+      # default, which uses local DNS by default already.
+      when: board == "beagleboneblack"
+      ansible.builtin.apt:
+        pkg:
         - systemd-resolved
     # Ensure that git pushes always use SSH instead of HTTPS (to be used
     # along with SSH agent forwarding)
