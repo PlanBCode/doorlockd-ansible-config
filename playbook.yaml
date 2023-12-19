@@ -130,6 +130,8 @@
     cert: '{{ client_dir }}/client.pem'
     user: 'debian'
     group: 'debian'
+    backend_url: 'https://lock-backend.lan'
+    server_ssl_fingerprint: 'bbecbb85dd6b5e55ed69eab39147c3572d4f43a8f6c9e32dc46d836a00a07a45'
   tasks:
     - name: Configure UART devicetree
       when: board == "beagleboneblack"
@@ -201,7 +203,7 @@
           src_file: './files/client-config/{{ inventory_hostname }}.ini'
       # Skip this step if no config file is available (e.g. for test hosts)
       when: src_file is file
-      ansible.builtin.copy:
+      ansible.builtin.template:
         dest: '{{ client_dir }}/config.ini'
         src: '{{ src_file }}'
       notify:
