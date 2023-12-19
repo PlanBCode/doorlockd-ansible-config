@@ -8,5 +8,12 @@ Group={{ group }}
 WorkingDirectory={{ client_dir }}
 ExecStart=poetry run ./app.py
 
+# Wait for some time between restarts
+RestartSec=5
+Restart=always
+# Disable burst restart limits, since we have RestartSec delay already
+# (StartLimit might cause Systemd to give up restarting the service...)
+StartLimitInterval=0
+
 [Install]
 WantedBy=multi-user.target
