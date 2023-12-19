@@ -151,6 +151,12 @@
       when: (board == "rockpi-s") and copy_uart_dt.changed
       command: armbian-add-overlay /root/rockpi-s-enable-uart2.dts
 
+    - name: Setup GPIO permissions
+      when: board == "rockpi-s"
+      ansible.builtin.copy:
+        dest: /etc/udev/rules.d/99-gpio-permissions.rules
+        content: SUBSYSTEM=="gpio", ACTION=="add", GROUP="plugdev", MODE="0660"
+
     - name: Install apt dependencies
       ansible.builtin.apt:
         pkg:
