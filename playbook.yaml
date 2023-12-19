@@ -266,6 +266,14 @@
         enabled: true
         state: started
 
+    # The socket will ensure django is auto-started, but start it
+    # automatically to prevent a big startup delay on the first request
+    - name: Enable service
+      ansible.builtin.service:
+        name: doorlockd-backend.service
+        enabled: true
+        state: started
+
     - name: Create run dir
       ansible.builtin.file:
         state: 'directory'
