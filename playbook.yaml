@@ -191,9 +191,13 @@
         mode: 'u=rw,g=r'
 
     - name: Copy config
+      vars:
+          src_file: './files/client-config/{{ inventory_hostname }}.ini'
+      # Skip this step if no config file is available (e.g. for test hosts)
+      when: src_file is file
       ansible.builtin.copy:
         dest: '{{ client_dir }}/config.ini'
-        src: './files/lock-client-config.ini'
+        src: '{{ src_file }}'
       notify:
         - Restart doorlockd-client
 
