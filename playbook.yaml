@@ -140,6 +140,17 @@
         insertafter: "EOF"
         state: present
 
+    - name: Copy UART devicetree
+      when: board == "rockpi-s"
+      ansible.builtin.copy:
+        dest: '/root/'
+        src: './files/rockpi-s-enable-uart2.dts'
+      register: copy_uart_dt
+
+    - name: Install UART devicetree
+      when: (board == "rockpi-s") and copy_uart_dt.changed
+      command: armbian-add-overlay /root/rockpi-s-enable-uart2.dts
+
     - name: Install apt dependencies
       ansible.builtin.apt:
         pkg:
