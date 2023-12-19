@@ -39,6 +39,23 @@ Steps:
 
         ansible-playbook -i inventory.yaml playbook.yaml --limit test
 
+Setting up a Rock Pi S
+----------------------
+Start with a base Debian image, CLI flavor (maybe minimal CLI also
+works, not tested). Can be downloaded from:
+
+  https://www.armbian.com/rockpi-s/
+
+Steps:
+ - Flash image on SD card
+ - Login (with root:1234) and walk through the setup wizard (create user
+   debian, passwords do not matter)
+ - Setup key authentication for root (e.g. with ssh-copy-id)
+ - Add to inventory (or use existing maybe)
+ - Run initial sync:
+
+        ansible-playbook -i inventory.yaml playbook.yaml --limit test
+
 Set up new manager
 ------------------
  - Run ansible for main setup
