@@ -24,6 +24,9 @@
     # works if systemd-networkd does not have offline status (so does
     # not work if adding a manual route).
     - name: Enable NTP timesync
+      # Only needed on bbb, Armbian uses chrony instead of timesyncd and
+      # has it enabled by default.
+      when: board == "beagleboneblack"
       # Normally you would use timedatectl set-ntp yes, but this enables
       # a service underwater, so do that directly so ansible can see if
       # it is already done or not. The service name is taken from
