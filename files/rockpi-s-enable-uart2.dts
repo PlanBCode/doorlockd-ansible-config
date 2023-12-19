@@ -1,0 +1,9 @@
+/dts-v1/;
+/plugin/;
+
+// This refers to the uart1 module defined in the main devicetree, see
+// e.g. /proc/device-tree/__symbols__/uart1
+&uart2 {
+    // Enable module
+    status = "okay";
+};
