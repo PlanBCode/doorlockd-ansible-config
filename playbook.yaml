@@ -171,10 +171,10 @@
       become: true
       become_user: '{{ user }}'
       ansible.builtin.command:
-        # TODO: Can we somehow let ansible know whether something
-        # changed or not, so it can show proper ok vs changed output?
         cmd: poetry install --only=main --no-root
         chdir: '{{ client_dir }}'
+      register: poetry_result
+      changed_when: ("No dependencies to install or update" not in poetry_result.stdout)
       notify:
         - Restart doorlockd-client
 
@@ -253,10 +253,10 @@
       become: true
       become_user: '{{ user }}'
       ansible.builtin.command:
-        # TODO: Can we somehow let ansible know whether something
-        # changed or not, so it can show proper ok vs changed output?
         cmd: poetry install --only=main
         chdir: '{{ django_dir }}'
+      register: poetry_result
+      changed_when: ("No dependencies to install or update" not in poetry_result.stdout)
 
     - name: Install systemd socket
       ansible.builtin.copy:
@@ -304,6 +304,8 @@
       ansible.builtin.command:
         cmd: poetry run ./manage.py migrate
         chdir: '{{ django_dir }}'
+      register: migrations_result
+      changed_when: ("No migrations to apply" not in migrations_result.stdout)
       notify:
         - Restart gunicorn
 
@@ -313,6 +315,8 @@
       ansible.builtin.command:
         cmd: poetry run ./manage.py collectstatic --no-input
         chdir: '{{ django_dir }}'
+      register: collect_static_result
+      changed_when: ("0 static files copied to" not in collect_static_result.stdout)
       notify:
         - Restart gunicorn
 
