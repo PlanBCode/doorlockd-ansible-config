@@ -1,3 +1,16 @@
+# This is a copy of https://github.com/ansible-collections/community.general/blob/main/plugins/callback/log_plays.py
+# But with these changes:
+#  - Optionally use a new log file for each playbook run
+#  - Added multi_line_yaml format to get more readable log files
+#  - Drop stdout/err_lines if stdout/err is also present
+#  - Omit internal data
+#  - Respect _ansible_no_log
+#
+# The latter three (plus some the yaml Dumper class) were taken from
+# https://github.com/ansible-collections/community.general/blob/main/plugins/callback/yaml.py
+#
+# TODO: Submit these changes back upstream
+#
 # -*- coding: utf-8 -*-
 # Copyright (c) 2012, Michael DeHaan, <michael.dehaan@gmail.com>
 # Copyright (c) 2017 Ansible Project
@@ -26,18 +39,72 @@ DOCUMENTATION = '''
         ini:
           - section: callback_log_plays
             key: log_folder
+      log_format:
+        default: single_line_json
+        description: The format to use for log lines
+        choices: [single_line_json, multi_line_yaml]
+        env:
+          - name: ANSIBLE_LOG_FORMAT
+        ini:
+          - section: callback_log_plays
+            key: log_format
+      log_file_per_playbook_run:
+        default: false
+        description: Whether to log each playbook run and host to its own file (true), or just have a single file per host (false)
+        type: bool
+        env:
+          - name: ANSIBLE_LOG_FILE_PER_PLAYBOOK_RUN
+        ini:
+          - section: callback_log_plays
+            key: log_file_per_playbook_run
 '''
 
 import os
+import re
 import time
 import json
+import yaml
+import string
 
 from ansible.utils.path import makedirs_safe
 from ansible.module_utils.common.text.converters import to_bytes
 from ansible.module_utils.common._collections_compat import MutableMapping
 from ansible.parsing.ajson import AnsibleJSONEncoder
 from ansible.plugins.callback import CallbackBase
+from ansible.parsing.yaml.dumper import AnsibleDumper
+from ansible.plugins.callback import strip_internal_keys, module_response_deepcopy
 
+# should_use_block and MyDumper copied from https://github.com/ansible-collections/community.general/blob/main/plugins/callback/yaml.py
+def should_use_block(value):
+    """Returns true if string should be in block format"""
+    for c in u"\u000a\u000d\u001c\u001d\u001e\u0085\u2028\u2029":
+        if c in value:
+            return True
+    return False
+
+class MyDumper(AnsibleDumper):
+    def represent_scalar(self, tag, value, style=None):
+        """Uses block style for multi-line strings"""
+        if style is None:
+            if should_use_block(value):
+                style = '|'
+                # we care more about readable than accuracy, so...
+                # ...no trailing space
+                value = value.rstrip()
+                # ...and non-printable characters
+                value = ''.join(x for x in value if x in string.printable or ord(x) >= 0xA0)
+                # ...tabs prevent blocks from expanding
+                value = value.expandtabs()
+                # ...and odd bits of whitespace
+                value = re.sub(r'[\x0b\x0c\r]', '', value)
+                # ...as does trailing space
+                value = re.sub(r' +\n', '\n', value)
+            else:
+                style = self.default_style
+        node = yaml.representer.ScalarNode(tag, value, style=style)
+        if self.alias_key is not None:
+            self.represented_objects[self.alias_key] = node
+        return node
 
 # NOTE: in Ansible 1.2 or later general logging is available without
 # this plugin, just set ANSIBLE_LOG_PATH as an environment variable
@@ -56,6 +123,7 @@ class CallbackModule(CallbackBase):
     CALLBACK_NEEDS_WHITELIST = True
 
     TIME_FORMAT = "%b %d %Y %H:%M:%S"
+    FILENAME_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
     MSG_FORMAT = "%(now)s - %(playbook)s - %(task_name)s - %(task_action)s - %(category)s - %(data)s\n\n"
 
     def __init__(self):
@@ -66,6 +134,8 @@ class CallbackModule(CallbackBase):
         super(CallbackModule, self).set_options(task_keys=task_keys, var_options=var_options, direct=direct)
 
         self.log_folder = self.get_option("log_folder")
+        self.format = self.get_option("log_format")
+        self.file_per_run = self.get_option("log_file_per_playbook_run")
 
         if not os.path.exists(self.log_folder):
             makedirs_safe(self.log_folder)
@@ -76,14 +146,31 @@ class CallbackModule(CallbackBase):
             if '_ansible_verbose_override' in data:
                 # avoid logging extraneous data
                 data = 'omitted'
+            elif data.get('_ansible_no_log', False):
+                data = 'omitted due to no_log'
             else:
-                data = data.copy()
-                invocation = data.pop('invocation', None)
-                data = json.dumps(data, cls=AnsibleJSONEncoder)
-                if invocation is not None:
-                    data = json.dumps(invocation) + " => %s " % data
+                data = strip_internal_keys(module_response_deepcopy(result._result))
 
-        path = os.path.join(self.log_folder, result._host.get_name())
+                # if we already have stdout, we don't need stdout_lines
+                if 'stdout' in data and 'stdout_lines' in data:
+                    data['stdout_lines'] = '<omitted>'
+
+                # if we already have stderr, we don't need stderr_lines
+                if 'stderr' in data and 'stderr_lines' in data:
+                    data['stderr_lines'] = 'omitted'
+
+                if self.format == 'single_line_json':
+                    invocation = data.pop('invocation', None)
+                    data = json.dumps(data, cls=AnsibleJSONEncoder)
+                    if invocation is not None:
+                        data = json.dumps(invocation) + " => %s " % data
+                else:
+                    # This introduces an extra dict layer so all of the
+                    # dict contents end up *after* the log line, and all
+                    # lines are indented
+                    data = yaml.dump({'result': data}, Dumper=MyDumper, default_flow_style=False)
+
+        path = os.path.join(self.log_folder, self.filename_prefix + result._host.get_name())
         now = time.strftime(self.TIME_FORMAT, time.localtime())
 
         msg = to_bytes(
@@ -117,6 +204,10 @@ class CallbackModule(CallbackBase):
 
     def v2_playbook_on_start(self, playbook):
         self.playbook = playbook._file_name
+        if self.file_per_run:
+            self.filename_prefix = '{}-{}-'.format(time.strftime(self.FILENAME_TIME_FORMAT, time.localtime()), self.playbook)
+        else:
+            self.filename_prefix = ''
 
     def v2_playbook_on_import_for_host(self, result, imported_file):
         self.log(result, 'IMPORTED', imported_file)
