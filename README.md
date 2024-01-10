@@ -71,7 +71,7 @@ Set up new lock
  - Run ansible for main setup
  - Get the generated certificate by running:
 
-       /opt/doorlockd/lock-client$ ./tools/gencert.sh data/client.pem
+       /opt/doorlockd/lock-client$ ./tools/gencert.sh client.pem
 
    (answer "N" for overwrite)
  - Create a new lock in the manager Django admin, add certificate.
