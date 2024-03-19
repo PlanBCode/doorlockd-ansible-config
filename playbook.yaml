@@ -115,7 +115,7 @@
     - name: Checkout doorlockd
       ansible.builtin.git:
         repo: https://github.com/wie-niet/doorlockd.git
-        version: 8477cda72ecfc537d848566f6ab2de8b7a4a5118
+        version: b0f55c02244a858095b4514d42d55a1b68786672
         dest: '{{ clone_dir }}'
 
 
@@ -171,7 +171,7 @@
       become: true
       become_user: '{{ user }}'
       ansible.builtin.command:
-        cmd: poetry install --only=main --no-root
+        cmd: poetry install --only=main --no-root --extras "gpiod nfcpy"
         chdir: '{{ client_dir }}'
       register: poetry_result
       changed_when: ("No dependencies to install or update" not in poetry_result.stdout)
