@@ -10,8 +10,8 @@ The inventory contains a `test-bbb` and `test-rockpi-s` entry, which are
 intended to be used for local testing (will install both client and
 manager).
 
-Below, all commands use `--limit test`, make sure to change that to
-whatever host you are working with.
+Below, all commands use `--limit some_host` to run against a single host, make
+sure to change that to whatever host you are working with.
 
 Setting up a Beaglebone black
 ------------------
@@ -37,7 +37,7 @@ Steps:
  - Add to inventory (or use existing maybe)
  - Run initial sync:
 
-        ansible-playbook -i inventory.yaml playbook.yaml --limit test
+        ansible-playbook -i inventory.yaml playbook.yaml --limit bbb
 
 Setting up a Rock Pi S
 ----------------------
@@ -54,7 +54,7 @@ Steps:
  - Add to inventory (or use existing maybe)
  - Run initial sync:
 
-        ansible-playbook -i inventory.yaml playbook.yaml --limit test
+        ansible-playbook -i inventory.yaml playbook.yaml --limit rockpi-s
 
 Set up new manager
 ------------------
@@ -85,7 +85,7 @@ Enable NAT on your local system
 
 Enable routing over USB on the beaglebone:
 
-    ansible-playbook -i inventory.yaml playbook.yaml --tags usb_route --limit test
+    ansible-playbook -i inventory.yaml playbook.yaml --tags usb_route --limit bbb
 
 This sets temporary config (until beaglebone is rebooted), to prevent
 this default route from breaking connectivity later (e.g. when
@@ -96,8 +96,8 @@ Write to EMMC (Beaglebone)
 --------------------------
 To copy SD card installation to EMMC:
 
-    ansible-playbook -i inventory.yaml playbook.yaml --tags flash_emmc --limit test
-    ansible-playbook -i inventory.yaml playbook.yaml --tags reboot --limit test
+    ansible-playbook -i inventory.yaml playbook.yaml --tags flash_emmc --limit bbb
+    ansible-playbook -i inventory.yaml playbook.yaml --tags reboot --limit bbb
 
 The second command will raise an error because the board reboots
 immediately.
