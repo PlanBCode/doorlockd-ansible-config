@@ -167,7 +167,7 @@
       when: (board == "beagleboneblack") and copy_gpio_bias_dt.changed
       # This hardcodes the kernel dirname, but if it does not exist this
       # fails, which is good enough for now
-      command: dtc -@ -Hepapr -I dts -O dtb -o /boot/dtbs/overlays/5.10.168-ti-r72/bbb-gpio-bias-fix.dtbo /root/bbb-gpio-bias-fix.dts
+      command: dtc -@ -Hepapr -I dts -O dtb -o /boot/dtbs/5.10.168-ti-r72/overlays/bbb-gpio-bias-fix.dtbo /root/bbb-gpio-bias-fix.dts
 
     - name: Enable GPIO bias fix devicetree
       when: board == "beagleboneblack"
