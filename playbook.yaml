@@ -153,6 +153,31 @@
       when: (board == "rockpi-s") and copy_uart_dt.changed
       command: armbian-add-overlay /root/rockpi-s-enable-uart2.dts
 
+    # This allows gpiod control of pullup and pulldown for selected pins
+    # Needed until a more general fix is applied in the beaglebone
+    # image, see https://openbeagle.org/beagleboard/BeagleBoard-DeviceTrees/-/merge_requests/71
+    - name: Copy GPIO bias fix devicetree
+      when: board == "beagleboneblack"
+      ansible.builtin.copy:
+        dest: '/root/'
+        src: './files/bbb-gpio-bias-fix.dts'
+      register: copy_gpio_bias_dt
+
+    - name: Compile GPIO bias fix devicetree
+      when: (board == "beagleboneblack") and copy_gpio_bias_dt.changed
+      # This hardcodes the kernel dirname, but if it does not exist this
+      # fails, which is good enough for now
+      command: dtc -@ -Hepapr -I dts -O dtb -o /boot/dtbs/overlays/5.10.168-ti-r72/bbb-gpio-bias-fix.dtbo /root/bbb-gpio-bias-fix.dts
+
+    - name: Enable GPIO bias fix devicetree
+      when: board == "beagleboneblack"
+      lineinfile:
+        dest: "/boot/uEnv.txt"
+        regexp: "^#?uboot_overlay_addr4=.*$"
+        line: "uboot_overlay_addr4=bbb-gpio-bias-fix.dtbo"
+        insertafter: "EOF"
+        state: present
+
     - name: Setup GPIO permissions
       when: board == "rockpi-s"
       ansible.builtin.copy:
