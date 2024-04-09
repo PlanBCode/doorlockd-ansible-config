@@ -15,6 +15,10 @@ locks:
       ansible_host: lock-d2.lan
       ansible_user: root
       board: beagleboneblack
+    lock-main-entrance:
+      ansible_host: lock-main-entrance.lan
+      ansible_user: root
+      board: beagleboneblack
 managers:
   hosts:
     # For testing
