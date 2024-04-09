@@ -1,0 +1,49 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "ti,am335x-bone-black";
+};
+
+&am33xx_pinmux {
+	/* Change from pinctrl to pinconf to allow gpio-controlled bias */
+	compatible = "pinconf-single";
+};
+
+/* This sets up the right properties to allow bias control through
+ * gpiod, on all pins that are used on the BBB doorlockd shield for
+ * buttons and leds (that could be repurposed for buttons).
+ *
+ * This could be solved generically, see
+ * https://openbeagle.org/beagleboard/BeagleBoard-DeviceTrees/-/merge_requests/71
+ */
+
+&P8_13_default_pin {
+	pinctrl-single,bias-pullup   =   < 0x10  0x10  0x08  0x18>;
+	pinctrl-single,bias-pulldown   = < 0x00  0x00  0x08  0x18>;
+};
+
+&P8_17_default_pin {
+	pinctrl-single,bias-pullup   =   < 0x10  0x10  0x08  0x18>;
+	pinctrl-single,bias-pulldown   = < 0x00  0x00  0x08  0x18>;
+};
+
+&P8_18_default_pin {
+	pinctrl-single,bias-pullup   =   < 0x10  0x10  0x08  0x18>;
+	pinctrl-single,bias-pulldown   = < 0x00  0x00  0x08  0x18>;
+};
+
+&P8_19_default_pin {
+	pinctrl-single,bias-pullup   =   < 0x10  0x10  0x08  0x18>;
+	pinctrl-single,bias-pulldown   = < 0x00  0x00  0x08  0x18>;
+};
+
+&P9_14_default_pin {
+	pinctrl-single,bias-pullup   =   < 0x10  0x10  0x08  0x18>;
+	pinctrl-single,bias-pulldown   = < 0x00  0x00  0x08  0x18>;
+};
+
+&P9_16_default_pin {
+	pinctrl-single,bias-pullup   =   < 0x10  0x10  0x08  0x18>;
+	pinctrl-single,bias-pulldown   = < 0x00  0x00  0x08  0x18>;
+};
