@@ -20,6 +20,9 @@
       ansible.builtin.copy:
         dest: '/etc/sudoers.d/env_keep'
         src: './files/sudoers_env_keep'
+    - name: Set timezone
+      community.general.timezone:
+        name: Europe/Amsterdam
     # Timesync is needed for apt to verify signatures. Timesync only
     # works if systemd-networkd does not have offline status (so does
     # not work if adding a manual route).
