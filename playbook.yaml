@@ -105,27 +105,12 @@
         state: restarted
 
 
-- name: Check out doorlockd
-  hosts: [locks, managers]
-  tags: [client, manager]
-  gather_facts: False # Not using facts
-  vars:
-    clone_dir: /opt/doorlockd
-  tasks:
-    - name: Checkout doorlockd
-      ansible.builtin.git:
-        repo: https://github.com/wie-niet/doorlockd.git
-        version: c6e0a7e14e8ffdacfef64636575cdcb39899ba3c
-        dest: '{{ clone_dir }}'
-
-
-- name: Set up doorlockd
+- name: Set up doorlockd-client
   hosts: locks
   tags: client
   gather_facts: False # Not using facts
   vars:
-    clone_dir: /opt/doorlockd
-    client_dir: '{{ clone_dir }}/lock-client'
+    client_dir: /opt/doorlockd-client
     run_dir: '{{ client_dir }}/run'
     cert: '{{ client_dir }}/client.pem'
     user: 'debian'
@@ -133,6 +118,11 @@
     backend_url: 'https://lock-backend.lan'
     server_ssl_fingerprint: 'bbecbb85dd6b5e55ed69eab39147c3572d4f43a8f6c9e32dc46d836a00a07a45'
   tasks:
+    - name: Checkout doorlockd-client
+      ansible.builtin.git:
+        repo: https://github.com/doorlockd/doorlockd-client.git
+        version: 6e449bd44324925eb69a55d69307745f9fb1667e
+        dest: '{{ client_dir }}'
     - name: Configure UART devicetree
       when: board == "beagleboneblack"
       lineinfile:
@@ -261,12 +251,16 @@
   tags: manager
   gather_facts: False # Not using facts
   vars:
-    clone_dir: /opt/doorlockd
-    django_dir: '{{ clone_dir }}/django-backend'
+    django_dir: /opt/doorlockd-backend
     run_dir: '{{ django_dir }}/run'
     user: 'debian'
     group: 'debian'
   tasks:
+    - name: Checkout doorlockd-backend
+      ansible.builtin.git:
+        repo: https://github.com/doorlockd/doorlockd-backend.git
+        version: f484aa183d2ca6ff239bde8f67299f6c61c767c9
+        dest: '{{ django_dir }}'
     - name: Install apt dependencies
       ansible.builtin.apt:
         pkg:
