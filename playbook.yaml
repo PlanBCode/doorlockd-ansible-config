@@ -141,7 +141,7 @@
 
     - name: Install UART devicetree
       when: (board == "rockpi-s") and copy_uart_dt.changed
-      command: armbian-add-overlay /root/rockpi-s-enable-uart2.dts
+      command: "armbian-add-overlay {{ copy_uart_dt.dest }}"
 
     # This allows gpiod control of pullup and pulldown for selected pins
     # Needed until a more general fix is applied in the beaglebone
