@@ -32,8 +32,8 @@ server {
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header Host $http_host;
 
-    # proxy_set_header X-SSL-CERT $ssl_client_escaped_cert;
-    proxy_set_header X-SSL-RAW-CERT $ssl_client_raw_cert;
+    proxy_set_header X-SSL-CERT $ssl_client_escaped_cert;
+    # proxy_set_header X-SSL-RAW-CERT $ssl_client_raw_cert;
     # proxy_set_header X-SSL-Figerprint $ssl_client_fingerprint;
 
     # we don't want nginx trying to do something clever with
