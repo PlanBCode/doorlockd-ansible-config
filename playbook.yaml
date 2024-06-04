@@ -262,7 +262,7 @@
     - name: Checkout doorlockd-backend
       ansible.builtin.git:
         repo: https://github.com/doorlockd/doorlockd-backend.git
-        version: f484aa183d2ca6ff239bde8f67299f6c61c767c9
+        version: 5dc555f85adcc054b38c0fba28e11f7c314a2d80
         dest: '{{ django_dir }}'
     - name: Install apt dependencies
       ansible.builtin.apt:
