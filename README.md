@@ -8,7 +8,7 @@ only hose, you can use the `--limit` option.
 
 The inventory contains a `test-bbb` and `test-rockpi-s` entry, which are
 intended to be used for local testing (will install both client and
-manager).
+backend).
 
 Below, all commands use `--limit some_host` to run against a single host, make
 sure to change that to whatever host you are working with.
@@ -56,7 +56,7 @@ Steps:
 
         ansible-playbook -i inventory.yaml playbook.yaml --limit rockpi-s
 
-Set up new manager
+Set up new backend
 ------------------
  - Run ansible for main setup
  - Create a new superuser
@@ -74,7 +74,21 @@ Set up new lock
        /opt/doorlockd/lock-client$ ./tools/gencert.sh client.pem
 
    (answer "N" for overwrite)
- - Create a new lock in the manager Django admin, add certificate.
+ - Create a new lock in the backend Django admin, add certificate.
+
+Updating
+--------
+To update the client on all locks:
+
+    ansible-playbook -i inventory.yaml playbook.yaml --limit locks --tags system,lock
+
+To update the backend:
+
+    ansible-playbook -i inventory.yaml playbook.yaml --limit backends --tags system,backend
+
+To update everything:
+
+    ansible-playbook -i inventory.yaml playbook.yaml --limit locks,backends
 
 Set up NAT through USB (Beaglebone)
 -----------------------------------

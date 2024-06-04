@@ -109,7 +109,7 @@
 
 
 - name: Set up doorlockd-client
-  hosts: locks
+  hosts: locks:testing
   tags: client
   gather_facts: False # Not using facts
   vars:
@@ -249,9 +249,9 @@
         state: restarted
 
 
-- name: Set up manager
-  hosts: managers
-  tags: manager
+- name: Set up backend
+  hosts: backends:testing
+  tags: backend
   gather_facts: False # Not using facts
   vars:
     django_dir: /opt/doorlockd-backend

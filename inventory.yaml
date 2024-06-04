@@ -1,16 +1,5 @@
 locks:
   hosts:
-    # For testing
-    bbb:
-      ansible_host: 192.168.7.2
-      ansible_user: root
-      board: beagleboneblack
-    # For testing
-    rockpi-s:
-      ansible_host: rockpi-s
-      ansible_user: root
-      board: rockpi-s
-
     lock-d2:
       ansible_host: lock-d2.lan
       ansible_user: root
@@ -19,9 +8,16 @@ locks:
       ansible_host: lock-main-entrance.lan
       ansible_user: root
       board: beagleboneblack
-managers:
+
+backends:
   hosts:
-    # For testing
+    lock-d2:
+      ansible_host: lock-d2.lan
+      ansible_user: root
+
+# For ad-hoc testing
+testing:
+  hosts:
     bbb:
       ansible_host: 192.168.7.2
       ansible_user: root
@@ -29,6 +25,3 @@ managers:
       ansible_host: rockpi-s
       ansible_user: root
       board: rockpi-s
-    lock-d2:
-      ansible_host: lock-d2.lan
-      ansible_user: root
