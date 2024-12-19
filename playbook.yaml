@@ -124,7 +124,7 @@
     - name: Checkout doorlockd-client
       ansible.builtin.git:
         repo: https://github.com/doorlockd/doorlockd-client.git
-        version: 9c05301aebac96eb29a0ddef5cc8f0924524a8c7
+        version: bd4861d96e8f9bb1717c521c49b31670460a6984
         dest: '{{ client_dir }}'
       notify:
         - Restart doorlockd-client
@@ -265,7 +265,7 @@
     - name: Checkout doorlockd-backend
       ansible.builtin.git:
         repo: https://github.com/doorlockd/doorlockd-backend.git
-        version: f78ef77f799b083a4013bb744376c99f8fcc4d92
+        version: 2c5f0128e4bf66a9824ce427a639701ca7079e86
         dest: '{{ django_dir }}'
       notify:
         - Restart gunicorn
