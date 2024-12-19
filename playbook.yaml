@@ -126,6 +126,9 @@
         repo: https://github.com/doorlockd/doorlockd-client.git
         version: 9c05301aebac96eb29a0ddef5cc8f0924524a8c7
         dest: '{{ client_dir }}'
+      notify:
+        - Restart doorlockd-client
+
     - name: Configure UART devicetree
       when: board == "beagleboneblack"
       lineinfile:
@@ -264,6 +267,8 @@
         repo: https://github.com/doorlockd/doorlockd-backend.git
         version: 65602a51b1ad9b7fc278f4cb601efa47a13a36d6
         dest: '{{ django_dir }}'
+      notify:
+        - Restart gunicorn
     - name: Install apt dependencies
       ansible.builtin.apt:
         pkg:
