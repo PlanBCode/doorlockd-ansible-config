@@ -124,7 +124,7 @@
     - name: Checkout doorlockd-client
       ansible.builtin.git:
         repo: https://github.com/doorlockd/doorlockd-client.git
-        version: 49c5e6fbf45a1b8d048e616f6ad264e8041da646
+        version: 9c05301aebac96eb29a0ddef5cc8f0924524a8c7
         dest: '{{ client_dir }}'
     - name: Configure UART devicetree
       when: board == "beagleboneblack"
