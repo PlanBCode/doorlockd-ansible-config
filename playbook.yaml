@@ -265,7 +265,7 @@
     - name: Checkout doorlockd-backend
       ansible.builtin.git:
         repo: https://github.com/doorlockd/doorlockd-backend.git
-        version: 65602a51b1ad9b7fc278f4cb601efa47a13a36d6
+        version: f78ef77f799b083a4013bb744376c99f8fcc4d92
         dest: '{{ django_dir }}'
       notify:
         - Restart gunicorn
