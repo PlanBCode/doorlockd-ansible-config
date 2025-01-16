@@ -248,8 +248,8 @@
         path: '/home/{{ user }}/.gitconfig'
         marker: "# {mark} DOORLOCKD-CLIENT GIT CONFIG"
         create: true
-        owner: {{ user }}
-        group: {{ group }}
+        owner: "{{ user }}"
+        group: "{{ group }}"
         block: |
           [safe]
           directory = {{ client_dir }}
@@ -372,8 +372,8 @@
         path: '/home/{{ user }}/.gitconfig'
         marker: "# {mark} DOORLOCKD-BACKEND GIT CONFIG"
         create: true
-        owner: {{ user }}
-        group: {{ group }}
+        owner: "{{ user }}"
+        group: "{{ group }}"
         block: |
           [safe]
           directory = {{ django_dir }}
