@@ -242,6 +242,18 @@
         name: doorlockd-client.service
         enabled: true
 
+    # This allows git running as user, though repo is owned by root
+    - name: Mark git directory as safe
+      ansible.builtin.blockinfile:
+        path: '/home/{{ user }}/.gitconfig'
+        marker: "# {mark} DOORLOCKD-CLIENT GIT CONFIG"
+        create: true
+        owner: {{ user }}
+        group: {{ group }}
+        block: |
+          [safe]
+          directory = {{ client_dir }}
+
   handlers:
     - name: Reload systemd
       command: /usr/bin/systemctl daemon-reload
@@ -353,6 +365,18 @@
         src: './files/nginx-vhost'
       notify:
         - Reload nginx
+
+    # This allows git running as user, though repo is owned by root
+    - name: Mark git directory as safe
+      ansible.builtin.blockinfile:
+        path: '/home/{{ user }}/.gitconfig'
+        marker: "# {mark} DOORLOCKD-BACKEND GIT CONFIG"
+        create: true
+        owner: {{ user }}
+        group: {{ group }}
+        block: |
+          [safe]
+          directory = {{ django_dir }}
 
   handlers:
     - name: Reload systemd
