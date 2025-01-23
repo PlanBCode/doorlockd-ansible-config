@@ -115,3 +115,9 @@ To copy SD card installation to EMMC:
 
 The second command will raise an error because the board reboots
 immediately.
+
+To update Django (+ production_settings.py)
+---------------------------------------------
+Uodate only:
+
+    ansible-playbook -i inventory.yaml playbook.yaml --limit backends --tags django

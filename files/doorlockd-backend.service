@@ -9,6 +9,10 @@ User={{ user }}
 Group={{ group }}
 RuntimeDirectory=doorlockd-backend
 WorkingDirectory={{ django_dir }}
+
+# production django settings.py
+Environment=DJANGO_SETTINGS_MODULE=doorlockd_backend.production_settings
+
 # By default, gunicorn runs sync workers (one request per worker), which
 # is fine for long-lived requests. For long polling or websockets, this
 # should probably be switched to a threaded/async worker type.
@@ -17,6 +21,7 @@ ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed
 TimeoutStopSec=5
 PrivateTmp=true
+
 
 [Install]
 WantedBy=multi-user.target

@@ -275,6 +275,7 @@
     group: 'debian'
   tasks:
     - name: Checkout doorlockd-backend
+      tags: [django]
       ansible.builtin.git:
         repo: https://github.com/doorlockd/doorlockd-backend.git
         version: 5627ac2993e4bd40b70f987cf379c6de97d3bf53
@@ -287,6 +288,13 @@
         - python3-poetry
         - nginx
         - ssl-cert # Autogenerates a self-signed certificate (called "snakeoil")
+    - name: Install doorlockd-backend production_settings.py
+      tags: [django]
+      ansible.builtin.template:
+        dest: '{{ django_dir }}/doorlockd_backend/production_settings.py'
+        src: './files/doorlockd_backend.production_settings.py'
+      notify:
+        - Restart gunicorn
 
     - name: Install python dependendencies
       become: true
@@ -305,6 +313,7 @@
         - Reload systemd
 
     - name: Install systemd service
+      tags: [django]
       ansible.builtin.template:
         dest: '/etc/systemd/system/'
         src: './files/doorlockd-backend.service'
