@@ -124,7 +124,7 @@
     - name: Checkout doorlockd-client
       ansible.builtin.git:
         repo: https://github.com/doorlockd/doorlockd-client.git
-        version: 0861d15a2116a775150f8d628355c2ac6c9f53e5
+        version: eec289f1639200b2277769f768e49f7e213605f8
         dest: '{{ client_dir }}'
       notify:
         - Restart doorlockd-client
