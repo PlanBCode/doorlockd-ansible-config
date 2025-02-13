@@ -80,7 +80,7 @@ Updating
 --------
 To update the client on all locks:
 
-    ansible-playbook -i inventory.yaml playbook.yaml --limit locks --tags system,lock
+    ansible-playbook -i inventory.yaml playbook.yaml --limit locks --tags system,client
 
 To update the backend:
 
