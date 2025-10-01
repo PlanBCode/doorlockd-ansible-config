@@ -21,3 +21,5 @@ LOGGING = {
         "level": "INFO",
     },
 }
+
+TIMEZONE = 'Europe/Amsterdam'
