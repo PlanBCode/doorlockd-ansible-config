@@ -278,7 +278,7 @@
       tags: [django]
       ansible.builtin.git:
         repo: https://github.com/doorlockd/doorlockd-backend.git
-        version: 4304aaf4a4781e19cc51a307e2529aa99365933e
+        version: 25b2e59b735323f8662b0b6d0294d3080128522b
         dest: '{{ django_dir }}'
       notify:
         - Restart gunicorn
