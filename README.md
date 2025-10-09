@@ -90,6 +90,10 @@ To update everything:
 
     ansible-playbook -i inventory.yaml playbook.yaml --limit locks,backends
 
+To update one specific device:
+
+    ansible-playbook -i inventory.yaml playbook.yaml --limit rockpi-s
+
 Set up NAT through USB (Beaglebone)
 -----------------------------------
 Enable NAT on your local system
