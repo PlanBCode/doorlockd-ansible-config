@@ -8,6 +8,10 @@ locks:
       ansible_host: lock-main-entrance.lan
       ansible_user: root
       board: beagleboneblack
+    lock-parking:
+      ansible_host: lock-parking.lan
+      ansible_user: root
+      board: rockpi-s	 
 
 backends:
   hosts:
