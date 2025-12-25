@@ -1,0 +1,10 @@
+# Copy this file to config.py and add an influx token below
+THRESHOLD_HUMID_ON = 90
+THRESHOLD_HUMID_OFF = THRESHOLD_HUMID_ON - 2
+LOOP_WAIT = 60
+HEATER_GPIO = ("/dev/gpiochip2", 13)  # aka io_export.out5
+
+INFLUX_URL = "https://influx.hbw.dewar.nl/api/v2/write"
+INFLUX_PARAMS = {"org": "de-war", "bucket": "sensors", "precision": "ns"}
+INFLUX_TOKEN = ""
+INFLUX_LOCATION = "Paslezerpaal\\ slagboom" # influx line protocol requires backslash escaped space

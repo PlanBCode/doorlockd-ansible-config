@@ -8,18 +8,9 @@ import atexit
 import socket
 import requests
 
-CMD_NAME = "app.py"
-LOGGING_DEFAULT="INFO"
+import config
 
-THRESHOLD_HUMID_ON = 90
-THRESHOLD_HUMID_OFF = THRESHOLD_HUMID_ON - 2
-LOOP_WAIT = 10
-HEATER_GPIO = "/dev/gpiochip2 13"  # aka io_export.out5
-
-INFLUX_URL = "https://influx.hbw.dewar.nl/api/v2/write"
-INFLUX_PARAMS = {"org": "de-war", "bucket": "sensors", "precision": "ns"}
-INFLUX_TOKEN = "mJYasM90vlpofyC-XmXOmxfhiyJzwf1wk7vnQE28OOvwIJWC8jkrQ2F6JrbKx8P63wSA9b9pslavXoQZONlciQ=="
-INFLUX_LOCATION = "Paslezerpaal\\ slagboom" # influx line protocol requires backslash escaped space
+LOGGING_DEFAULT = "INFO"
 
 logger = logging.getLogger(__name__)
 
@@ -56,9 +47,8 @@ def si7020_humid():
     )
 
 
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog=CMD_NAME)
+    parser = argparse.ArgumentParser()
     parser.add_argument(
         "-s",
         "--show",
@@ -110,9 +100,9 @@ if __name__ == "__main__":
             if name.isupper():
                 print(name, "=", value)
 
-        print(f"THRESHOLD_HUMID_ON = {THRESHOLD_HUMID_ON}")
-        print(f"THRESHOLD_HUMID_OFF = {THRESHOLD_HUMID_OFF}")
-        print(f"LOOP_WAIT = {LOOP_WAIT}")
+        print(f"THRESHOLD_HUMID_ON = {config.THRESHOLD_HUMID_ON}")
+        print(f"THRESHOLD_HUMID_OFF = {config.THRESHOLD_HUMID_OFF}")
+        print(f"LOOP_WAIT = {config.LOOP_WAIT}")
         print("readings:")
         print("temp:  ", si7020_temp())
         print("humid: ", si7020_humid())
@@ -121,15 +111,15 @@ if __name__ == "__main__":
         logger.info("starting thermostaat deamon")
 
         # Heater: gpio settings:
-        gpio_chip, gpio_line = HEATER_GPIO.split(" ")
+        gpio_chip, gpio_line = config.HEATER_GPIO
 
         # Heater: setup IO Chip + cleanup
         chip = gpiod.Chip(gpio_chip)
         atexit.register(chip.close)
 
         # Heater: setup IO Line as OUTPUT + cleanup
-        config = {int(gpio_line): gpiod.LineSettings(direction=gpiod.line.Direction.OUTPUT)}
-        io_lines = chip.request_lines(config=config, consumer=CMD_NAME)
+        pinconfig = {gpio_line: gpiod.LineSettings(direction=gpiod.line.Direction.OUTPUT)}
+        io_lines = chip.request_lines(config=pinconfig)
         atexit.register(io_lines.release)
 
         #
@@ -150,33 +140,33 @@ if __name__ == "__main__":
             if heater_state != True and humid > THRESHOLD_HUMID_ON:
                 # turn heater on
                 io_lines.set_value(int(gpio_line), gpiod.line.Value.ACTIVE)
-                logger.info(f"humidity above {THRESHOLD_HUMID_ON}, heater turned on.")
+                logger.info(f"humidity above {config.THRESHOLD_HUMID_ON}, heater turned on.")
 
             # heater_state is True or None
-            elif heater_state != False and humid < THRESHOLD_HUMID_OFF:
+            elif heater_state and humid < config.THRESHOLD_HUMID_OFF:
                 # tunr heater off
                 io_lines.set_value(int(gpio_line), gpiod.line.Value.INACTIVE)
                 logger.info(
-                    f"humidity below {THRESHOLD_HUMID_OFF}, heater turned off."
+                    f"humidity below {config.THRESHOLD_HUMID_OFF}, heater turned off."
                 )
 
             #
             # Send our data to influx
             #
             headers = {
-                "Authorization": f"Token {INFLUX_TOKEN}",
+                "Authorization": f"Token {config.INFLUX_TOKEN}",
                 "Content-Type": "text/plain; charset=utf-8",
                 "Accept": "application/json",
             }
             
             hostname = socket.gethostname()
 
-            data = f"humidity,device=doorlock,location={INFLUX_LOCATION},device_id={hostname},host={hostname} humidity_RH={humid} {timestamp_ns}\n"
-            data += f"temperature,device=doorlock,location={INFLUX_LOCATION},device_id={hostname},host={hostname} temperature_degC={temp} {timestamp_ns}\n"
-            data += f"heater,device=doorlock,location={INFLUX_LOCATION},device_id={hostname},host={hostname} state={int(heater_state)} {timestamp_ns}\n"
-            
+            data = f"humidity,device=doorlock,location={config.INFLUX_LOCATION},device_id={hostname},host={hostname} humidity_RH={humid} {timestamp_ns}\n"
+            data += f"temperature,device=doorlock,location={config.INFLUX_LOCATION},device_id={hostname},host={hostname} temperature_degC={temp} {timestamp_ns}\n"
+            data += f"heater,device=doorlock,location={config.INFLUX_LOCATION},device_id={hostname},host={hostname} state={int(heater_state)} {timestamp_ns}\n"
+
             response = requests.post(
-                INFLUX_URL, params=INFLUX_PARAMS, headers=headers, data=data
+                config.INFLUX_URL, params=config.INFLUX_PARAMS, headers=headers, data=data
             )
             
             if not response.ok:
@@ -184,6 +174,6 @@ if __name__ == "__main__":
 
 
             # end of loop
-            time.sleep(LOOP_WAIT)
+            time.sleep(config.LOOP_WAIT)
 
         logger.info("thermostaat deamon stopt.")
