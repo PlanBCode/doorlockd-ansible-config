@@ -402,6 +402,71 @@
         state: restarted
 
 
+- name: Set up heater control
+  hosts: heater-control
+  tags: heater-control
+  gather_facts: False # Not using facts
+  vars:
+    app_dir: /opt/heater-control
+    user: 'debian'
+    group: 'debian'
+  tasks:
+    - name: Copy SI7021 devicetree
+      ansible.builtin.copy:
+        dest: '/root/'
+        src: './files/rockpi-s-si7021-i2c1.dts'
+      register: copy_si7021_dt
+    - name: Install SI7021 devicetree
+      when: copy_si7021_dt.changed
+      command: "armbian-add-overlay {{ copy_si7021_dt.dest }}"
+
+    - name: Copy heater-control script
+      ansible.builtin.copy:
+        dest: '{{app_dir}}'
+        src: './files/heater-control/'
+        owner: '{{user}}'
+        group: '{{group}}'
+        mode: preserve
+      register: copy_heater_control
+      notify:
+        - Restart heater-control
+    - name: Install python dependendencies
+      become: true
+      become_user: '{{ user }}'
+      when: copy_heater_control.changed
+      ansible.builtin.command:
+        cmd: poetry install
+        chdir: '{{ app_dir }}'
+      register: poetry_result
+      changed_when: ("No dependencies to install or update" not in poetry_result.stdout)
+      notify:
+        - Restart heater-control
+
+    - name: Install systemd service
+      ansible.builtin.template:
+        dest: '/etc/systemd/system/'
+        src: './files/heater-control.service'
+      notify:
+        - Reload systemd
+        - Restart heater-control
+    - name: Enable service
+      ansible.builtin.service:
+        name: heater-control.service
+        enabled: true
+
+  handlers:
+    - name: Reload systemd
+      command: /usr/bin/systemctl daemon-reload
+
+    - name: Restart heater-control
+      ansible.builtin.service:
+        name: heater-control
+        state: restarted
+
+
+
+
+
 # Run these based on tags, e.g.: ansible-playbook -i inventory.yaml playbook.yaml --tags enable_emmc --limit hostname
 - name: Utilities
   hosts: all

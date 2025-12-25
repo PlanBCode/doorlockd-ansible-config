@@ -19,6 +19,10 @@ backends:
       ansible_host: lock-d2.lan
       ansible_user: root
 
+heater-control:
+  hosts:
+    lock-parking:
+
 # For ad-hoc testing
 testing:
   hosts:
