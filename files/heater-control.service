@@ -1,0 +1,19 @@
+[Unit]
+Description=Heater-Control
+After=network.target
+
+[Service]
+User={{ user }}
+Group={{ group }}
+WorkingDirectory={{ app_dir }}
+ExecStart=poetry run ./app.py -d
+
+# Wait for some time between restarts
+RestartSec=5
+Restart=always
+# Disable burst restart limits, since we have RestartSec delay already
+# (StartLimit might cause Systemd to give up restarting the service...)
+StartLimitInterval=0
+
+[Install]
+WantedBy=multi-user.target

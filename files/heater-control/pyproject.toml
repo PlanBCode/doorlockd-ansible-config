@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "thermostaat"
+version = "0.1.0"
+description = "Thermostaat voor de slagboom."
+authors = ["Diederik Hamelink <diederik@wie-niet.nl>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+requests = "^2.32.5"
+gpiod = "^2.3.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
