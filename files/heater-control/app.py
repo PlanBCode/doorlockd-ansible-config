@@ -90,7 +90,7 @@ if __name__ == "__main__":
             exit()
 
         logging.basicConfig(
-            format=f"%(levelname)s:%(message)s \r",
+            format="%(levelname)s:%(message)s \r",
             level=getattr(logging, args.log_level.upper()),
         )
 
@@ -137,7 +137,7 @@ if __name__ == "__main__":
             heater_state = bool(io_lines.get_value(int(gpio_line)))
 
             # heater_state is False or None |
-            if heater_state != True and humid > THRESHOLD_HUMID_ON:
+            if not heater_state and humid > config.THRESHOLD_HUMID_ON:
                 # turn heater on
                 io_lines.set_value(int(gpio_line), gpiod.line.Value.ACTIVE)
                 logger.info(f"humidity above {config.THRESHOLD_HUMID_ON}, heater turned on.")
@@ -158,7 +158,7 @@ if __name__ == "__main__":
                 "Content-Type": "text/plain; charset=utf-8",
                 "Accept": "application/json",
             }
-            
+
             hostname = socket.gethostname()
 
             data = f"humidity,device=doorlock,location={config.INFLUX_LOCATION},device_id={hostname},host={hostname} humidity_RH={humid} {timestamp_ns}\n"
@@ -168,10 +168,9 @@ if __name__ == "__main__":
             response = requests.post(
                 config.INFLUX_URL, params=config.INFLUX_PARAMS, headers=headers, data=data
             )
-            
+
             if not response.ok:
                 logger.warning(f"influx failed: {response.text}")
-
 
             # end of loop
             time.sleep(config.LOOP_WAIT)
