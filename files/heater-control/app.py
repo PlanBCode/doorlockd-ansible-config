@@ -53,16 +53,7 @@ if __name__ == "__main__":
         "-s",
         "--show",
         action="store_true",
-        help="Show temperature and relative humidity.",
-    )
-    parser.add_argument(
-        "-d", "--deamon", action="store_true", help="start thermostaat deamon."
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="show log messages.",
+        help="Show temperature and relative humidity and then exit.",
     )
     parser.add_argument(
         "-l",
@@ -72,27 +63,16 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    # one of these or help:
-    if args.show + args.deamon == 0:
-        print("error: supply one task. see -h or --help")
-        exit()
-
-    elif args.show + args.deamon < 1:
-        print("error: only supply one task. see -h or --help")
-        exit()
-
-    # enable logging:
-    if args.verbose:
-        if args.log_level.upper() not in logging.getLevelNamesMapping().keys():
-            print(
-                f"error: log-level not supported. must be one of: {', '.join(logging.getLevelNamesMapping().keys())}"
-            )
-            exit()
-
-        logging.basicConfig(
-            format="%(levelname)s:%(message)s \r",
-            level=getattr(logging, args.log_level.upper()),
+    if args.log_level.upper() not in logging.getLevelNamesMapping().keys():
+        print(
+            f"error: log-level not supported. must be one of: {', '.join(logging.getLevelNamesMapping().keys())}"
         )
+        exit()
+
+    logging.basicConfig(
+        format="%(levelname)s:%(message)s \r",
+        level=getattr(logging, args.log_level.upper()),
+    )
 
     if args.show:
         print("settings:")
@@ -107,8 +87,8 @@ if __name__ == "__main__":
         print("temp:  ", si7020_temp())
         print("humid: ", si7020_humid())
 
-    if args.deamon:
-        logger.info("starting thermostaat deamon")
+    else:
+        logger.info("starting heater-control deamon")
 
         # Heater: gpio settings:
         gpio_chip, gpio_line = config.HEATER_GPIO
@@ -175,4 +155,4 @@ if __name__ == "__main__":
             # end of loop
             time.sleep(config.LOOP_WAIT)
 
-        logger.info("thermostaat deamon stopt.")
+        logger.info("heater-control deamon stopped")
