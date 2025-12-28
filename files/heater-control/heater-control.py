@@ -120,12 +120,14 @@ if __name__ == "__main__":
             if not heater_state and humid > config.THRESHOLD_HUMID_ON:
                 # turn heater on
                 io_lines.set_value(int(gpio_line), gpiod.line.Value.ACTIVE)
+                heater_state = True # update state for influx write
                 logger.info(f"humidity above {config.THRESHOLD_HUMID_ON}, heater turned on.")
 
             # heater_state is True or None
             elif heater_state and humid < config.THRESHOLD_HUMID_OFF:
                 # tunr heater off
                 io_lines.set_value(int(gpio_line), gpiod.line.Value.INACTIVE)
+                heater_state = False # update state for influx write
                 logger.info(
                     f"humidity below {config.THRESHOLD_HUMID_OFF}, heater turned off."
                 )
