@@ -98,7 +98,9 @@ if __name__ == "__main__":
         atexit.register(chip.close)
 
         # Heater: setup IO Line as OUTPUT + cleanup
-        pinconfig = {gpio_line: gpiod.LineSettings(direction=gpiod.line.Direction.OUTPUT)}
+        pinconfig = {
+            gpio_line: gpiod.LineSettings(direction=gpiod.line.Direction.OUTPUT)
+        }
         io_lines = chip.request_lines(config=pinconfig)
         atexit.register(io_lines.release)
 
@@ -120,14 +122,16 @@ if __name__ == "__main__":
             if not heater_state and humid > config.THRESHOLD_HUMID_ON:
                 # turn heater on
                 io_lines.set_value(int(gpio_line), gpiod.line.Value.ACTIVE)
-                heater_state = True # update state for influx write
-                logger.info(f"humidity above {config.THRESHOLD_HUMID_ON}, heater turned on.")
+                heater_state = True  # update state for influx write
+                logger.info(
+                    f"humidity above {config.THRESHOLD_HUMID_ON}, heater turned on."
+                )
 
             # heater_state is True or None
             elif heater_state and humid < config.THRESHOLD_HUMID_OFF:
                 # tunr heater off
                 io_lines.set_value(int(gpio_line), gpiod.line.Value.INACTIVE)
-                heater_state = False # update state for influx write
+                heater_state = False  # update state for influx write
                 logger.info(
                     f"humidity below {config.THRESHOLD_HUMID_OFF}, heater turned off."
                 )
@@ -147,12 +151,18 @@ if __name__ == "__main__":
             data += f"temperature,device=doorlock,location={config.INFLUX_LOCATION},device_id={hostname},host={hostname} temperature_degC={temp} {timestamp_ns}\n"
             data += f"heater,device=doorlock,location={config.INFLUX_LOCATION},device_id={hostname},host={hostname} state={int(heater_state)} {timestamp_ns}\n"
 
-            response = requests.post(
-                config.INFLUX_URL, params=config.INFLUX_PARAMS, headers=headers, data=data
-            )
+            try:
+                response = requests.post(
+                    config.INFLUX_URL,
+                    params=config.INFLUX_PARAMS,
+                    headers=headers,
+                    data=data,
+                )
 
-            if not response.ok:
-                logger.warning(f"influx failed: {response.text}")
+                if not response.ok:
+                    logger.warning(f"influx failed: {response.text}")
+            except Exception as e:
+                logger.warning(f"influx request exception: {e}")
 
             # end of loop
             time.sleep(config.LOOP_WAIT)
