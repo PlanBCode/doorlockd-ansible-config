@@ -151,6 +151,7 @@ if __name__ == "__main__":
             data += f"temperature,device=doorlock,location={config.INFLUX_LOCATION},device_id={hostname},host={hostname} temperature_degC={temp} {timestamp_ns}\n"
             data += f"heater,device=doorlock,location={config.INFLUX_LOCATION},device_id={hostname},host={hostname} state={int(heater_state)} {timestamp_ns}\n"
 
+            logger.info(f"heater-control summary: humid={humid:.2f} temp={temp:+.2f} heater_state={heater_state}")
             try:
                 response = requests.post(
                     config.INFLUX_URL,
