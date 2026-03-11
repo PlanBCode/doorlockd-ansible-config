@@ -158,6 +158,7 @@ if __name__ == "__main__":
                     params=config.INFLUX_PARAMS,
                     headers=headers,
                     data=data,
+                    timeout=60,
                 )
 
                 if not response.ok:
